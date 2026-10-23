@@ -1,0 +1,358 @@
+"use strict";
+
+const SUBJECTS = [
+    "DISASTER RISK REDUCTION",
+    "GENERAL ORIENTATION",
+    "INTRODUCTION TO COMPUTING",
+    "IT ORIENTATION",
+    "IT PROGRAMMING",
+    "IT PROJECT-1",
+    "PATHFIT-1",
+    "PROGRAM LOGIC FORMULATION",
+    "UNDERSTANDING THE SELF"
+];
+
+const STORAGE_KEY = "studybuddy-tasks";
+
+const taskForm = document.getElementById("taskForm");
+const taskInput = document.getElementById("taskInput");
+const subjectInput = document.getElementById("subjectInput");
+const dateInput = document.getElementById("dateInput");
+const searchInput = document.getElementById("searchInput");
+const taskList = document.getElementById("taskList");
+const subjectsGrid = document.getElementById("subjectsGrid");
+
+let tasks = loadTasks();
+
+function loadTasks() {
+    try {
+        const saved = localStorage.getItem(STORAGE_KEY);
+
+        if (!saved) return [];
+
+        const parsed = JSON.parse(saved);
+
+        if (!Array.isArray(parsed)) return [];
+
+        return parsed.filter(task =>
+            task &&
+            typeof task.id === "string" &&
+            typeof task.name === "string" &&
+            SUBJECTS.includes(task.subject)
+        ).map(task => ({
+            id: task.id,
+            name: task.name,
+            subject: task.subject,
+            date: typeof task.date === "string" ? task.date : "",
+            completed: task.completed === true
+        }));
+    } catch (error) {
+        return [];
+    }
+}
+
+function saveTasks() {
+    try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(tasks));
+    } catch (error) {
+        alert("Your changes could not be saved in this browser.");
+    }
+}
+
+// Navigation
+function switchPage(pageId) {
+    const validPages = ["home", "planner", "subjects", "about"];
+
+    if (!validPages.includes(pageId)) return;
+
+    document.querySelectorAll(".page-section").forEach(section => {
+        section.classList.toggle(
+            "active",
+            section.id === "page-" + pageId
+        );
+    });
+
+    document.querySelectorAll("nav a[data-page]").forEach(link => {
+        const isActive = link.dataset.page === pageId;
+
+        link.classList.toggle("active", isActive);
+
+        if (isActive) {
+            link.setAttribute("aria-current", "page");
+        } else {
+            link.removeAttribute("aria-current");
+        }
+    });
+
+    if (pageId === "subjects") {
+        renderSubjects();
+    }
+
+    window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+document.querySelectorAll("nav a[data-page]").forEach(link => {
+    link.addEventListener("click", event => {
+        event.preventDefault();
+        const pageId = link.dataset.page;
+        switchPage(pageId);
+        history.replaceState(null, "", "#" + pageId);
+    });
+});
+
+function goHome() {
+    switchPage("home");
+    history.replaceState(null, "", "#home");
+}
+
+document.getElementById("logo").addEventListener("click", goHome);
+
+document.getElementById("logo").addEventListener("keydown", event => {
+    if (event.key === "Enter" || event.key === " ") {
+        event.preventDefault();
+        goHome();
+    }
+});
+
+document.getElementById("startPlanning").addEventListener("click", () => {
+    switchPage("planner");
+    history.replaceState(null, "", "#planner");
+});
+
+// Add task
+taskForm.addEventListener("submit", event => {
+    event.preventDefault();
+
+    const name = taskInput.value.trim();
+    const subject = subjectInput.value;
+    const date = dateInput.value;
+
+    if (!name) {
+        alert("Please enter a task.");
+        taskInput.focus();
+        return;
+    }
+
+    if (!SUBJECTS.includes(subject)) {
+        alert("Please select a valid subject.");
+        return;
+    }
+
+    tasks.push({
+        id: createTaskId(),
+        name: name,
+        subject: subject,
+        date: date,
+        completed: false
+    });
+
+    saveTasks();
+    renderTasks();
+
+    taskInput.value = "";
+    dateInput.value = "";
+    taskInput.focus();
+});
+
+function createTaskId() {
+    if (typeof crypto !== "undefined" && crypto.randomUUID) {
+        return crypto.randomUUID();
+    }
+
+    return Date.now().toString(36) +
+        Math.random().toString(36).slice(2);
+}
+
+// Render task list
+function renderTasks() {
+    const searchText = searchInput.value.trim().toLowerCase();
+
+    taskList.replaceChildren();
+
+    const filteredTasks = tasks.filter(task => {
+        const searchable = [
+            task.name,
+            task.subject,
+            task.date
+        ].join(" ").toLowerCase();
+
+        return searchable.includes(searchText);
+    });
+
+    if (filteredTasks.length === 0) {
+        const message = document.createElement("p");
+        message.className = "empty-message";
+        message.textContent = tasks.length === 0
+            ? "No tasks yet. Add your first study task above!"
+            : "No tasks match your search.";
+
+        taskList.appendChild(message);
+    } else {
+        filteredTasks.forEach(task => {
+            taskList.appendChild(createTaskCard(task));
+        });
+    }
+
+    updateProgress();
+}
+
+function createTaskCard(task) {
+    const card = document.createElement("div");
+    card.className = "task";
+
+    if (task.completed) {
+        card.classList.add("completed");
+    }
+
+    const main = document.createElement("div");
+    main.className = "task-main";
+
+    const checkbox = document.createElement("input");
+    checkbox.type = "checkbox";
+    checkbox.className = "task-checkbox";
+    checkbox.checked = task.completed;
+    checkbox.setAttribute("aria-label", "Complete " + task.name);
+
+    checkbox.addEventListener("change", () => {
+        updateTask(task.id, { completed: checkbox.checked });
+    });
+
+    const details = document.createElement("div");
+    details.className = "task-details";
+
+    const name = document.createElement("span");
+    name.className = "task-name";
+    name.textContent = task.name;
+
+    const meta = document.createElement("small");
+    meta.className = "task-meta";
+    meta.textContent = task.subject +
+        (task.date ? " • Due: " + task.date : "");
+
+    details.append(name, meta);
+    main.append(checkbox, details);
+
+    const deleteButton = document.createElement("button");
+    deleteButton.type = "button";
+    deleteButton.className = "delete-button";
+    deleteButton.textContent = "Delete";
+    deleteButton.setAttribute("aria-label", "Delete " + task.name);
+
+    deleteButton.addEventListener("click", () => {
+        deleteTask(task.id);
+    });
+
+    card.append(main, deleteButton);
+
+    return card;
+}
+
+// Update task
+function updateTask(id, changes) {
+    tasks = tasks.map(task =>
+        task.id === id ? { ...task, ...changes } : task
+    );
+
+    saveTasks();
+    renderTasks();
+}
+
+// Delete task
+function deleteTask(id) {
+    const task = tasks.find(item => item.id === id);
+
+    if (!task) return;
+
+    const confirmed = window.confirm(
+        'Delete the task "' + task.name + '"?'
+    );
+
+    if (!confirmed) return;
+
+    tasks = tasks.filter(item => item.id !== id);
+
+    saveTasks();
+    renderTasks();
+    renderSubjects();
+}
+
+// Search tasks
+searchInput.addEventListener("input", renderTasks);
+
+// Progress counters
+function updateProgress() {
+    const totalCount = tasks.length;
+    const completedCount = tasks.filter(task => task.completed).length;
+    const remainingCount = totalCount - completedCount;
+
+    document.getElementById("total").textContent = totalCount;
+    document.getElementById("completed").textContent = completedCount;
+    document.getElementById("remaining").textContent = remainingCount;
+}
+
+// Subjects page
+function renderSubjects() {
+    subjectsGrid.replaceChildren();
+
+    const subjectCounts = new Map();
+
+    tasks.forEach(task => {
+        if (!subjectCounts.has(task.subject)) {
+            subjectCounts.set(task.subject, {
+                total: 0,
+                completed: 0
+            });
+        }
+
+        const count = subjectCounts.get(task.subject);
+        count.total++;
+
+        if (task.completed) {
+            count.completed++;
+        }
+    });
+
+    if (subjectCounts.size === 0) {
+        const message = document.createElement("p");
+        message.className = "empty-message";
+        message.textContent =
+            "No subjects added yet. Create a task in the planner to see your subjects here!";
+
+        subjectsGrid.appendChild(message);
+        return;
+    }
+
+    subjectCounts.forEach((count, subject) => {
+        const card = document.createElement("div");
+        card.className = "subject-card";
+
+        const heading = document.createElement("h3");
+        heading.textContent = subject;
+
+        const total = document.createElement("p");
+        total.textContent = "Total tasks: " + count.total;
+
+        const completed = document.createElement("p");
+        completed.textContent = "Completed: " + count.completed;
+
+        const remaining = document.createElement("p");
+        remaining.textContent =
+            "Remaining: " + (count.total - count.completed);
+
+        card.append(heading, total, completed, remaining);
+        subjectsGrid.appendChild(card);
+    });
+}
+
+// Initialize the website
+renderTasks();
+renderSubjects();
+
+const initialPage = window.location.hash.replace("#", "");
+const validPages = ["home", "planner", "subjects", "about"];
+
+if (validPages.includes(initialPage)) {
+    switchPage(initialPage);
+} else {
+    switchPage("home");
+}

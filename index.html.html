@@ -1,0 +1,156 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#234f3e">
+    <meta name="description" content="StudyBuddy is a simple study planner for students.">
+    <title>StudyBuddy - Study Planner</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="script.js" defer></script>
+</head>
+<body>
+
+    <header>
+        <div class="logo" id="logo" role="button" tabindex="0">
+            STUDYBUDDY
+        </div>
+
+        <nav aria-label="Main navigation">
+            <a href="#home" data-page="home" class="active">Home</a>
+            <a href="#planner" data-page="planner">Planner</a>
+            <a href="#subjects" data-page="subjects">Subjects</a>
+            <a href="#about" data-page="about">About</a>
+        </nav>
+    </header>
+
+    <main>
+        <!-- Home -->
+        <section id="page-home" class="page-section active">
+            <section class="hero">
+                <div class="hero-text">
+                    <h1>Plan Your Study.</h1>
+                    <p>Organize your tasks and stay on track.</p>
+                    <button type="button" id="startPlanning">
+                        Start Planning
+                    </button>
+                </div>
+            </section>
+        </section>
+
+        <!-- Planner -->
+        <section id="page-planner" class="page-section">
+            <div class="main">
+                <h2 class="title">STUDY PLANNER</h2>
+
+                <div class="planner">
+                    <div class="tasks">
+                        <h2>My Study Tasks</h2>
+
+                        <form id="taskForm" class="task-form">
+                            <input
+                                type="text"
+                                id="taskInput"
+                                placeholder="Enter task"
+                                aria-label="Task name"
+                                required
+                                maxlength="200"
+                            >
+
+                            <select id="subjectInput" aria-label="Subject">
+                                <option>DISASTER RISK REDUCTION</option>
+                                <option>GENERAL ORIENTATION</option>
+                                <option>INTRODUCTION TO COMPUTING</option>
+                                <option>IT ORIENTATION</option>
+                                <option>IT PROGRAMMING</option>
+                                <option>IT PROJECT-1</option>
+                                <option>PATHFIT-1</option>
+                                <option>PROGRAM LOGIC FORMULATION</option>
+                                <option>UNDERSTANDING THE SELF</option>
+                            </select>
+
+                            <input
+                                type="date"
+                                id="dateInput"
+                                aria-label="Due date"
+                            >
+
+                            <button class="add-button" type="submit">
+                                Add Task
+                            </button>
+                        </form>
+
+                        <input
+                            class="search"
+                            type="search"
+                            id="searchInput"
+                            placeholder="Search tasks..."
+                            aria-label="Search tasks"
+                        >
+
+                        <div id="taskList" aria-live="polite"></div>
+                    </div>
+
+                    <aside class="side">
+                        <div class="counter">
+                            <h2>My Progress</h2>
+
+                            <p>Total Tasks</p>
+                            <div class="counter-number" id="total">0</div>
+
+                            <p>Completed Tasks</p>
+                            <div class="counter-number" id="completed">0</div>
+
+                            <p>Remaining Tasks</p>
+                            <div class="counter-number" id="remaining">0</div>
+                        </div>
+                    </aside>
+                </div>
+            </div>
+        </section>
+
+        <!-- Subjects -->
+        <section id="page-subjects" class="page-section">
+            <div class="main">
+                <h2 class="title">MY SUBJECTS</h2>
+                <div class="subjects-grid" id="subjectsGrid"></div>
+            </div>
+        </section>
+
+        <!-- About -->
+        <section id="page-about" class="page-section">
+            <div class="main">
+                <div class="about-card">
+                    <h2>About StudyBuddy</h2>
+
+                    <p>
+                        StudyBuddy is a simple study planner made to help
+                        students organize their school tasks.
+                    </p>
+
+                    <p>
+                        Plan your tasks, complete your activities, and
+                        keep track of your studies.
+                    </p>
+
+                    <div class="team-list">
+                        <h3>Development Team</h3>
+                        <p>Kent Wilhelm Pabelonio</p>
+                        <p>Justin Brillo</p>
+                        <p>Gabriel Andrei Nolasco</p>
+                        <p>Gabriel Oporto</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <h2>STUDYBUDDY</h2>
+        <p>Simple Study Planner for Students</p>
+        <p>Stay organized. Stay focused. Keep learning.</p>
+    </footer>
+
+</body>
+</html>
